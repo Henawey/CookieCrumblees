@@ -1,6 +1,6 @@
 # 🚀 DEPLOYMENT CHECKLIST
 
-## ✅ Files to Upload to GitHub (in v4 folder)
+## ✅ Files to Upload to GitHub (in v5 folder)
 
 1. ☐ store.html
 2. ☐ admin.html  
@@ -34,7 +34,7 @@ When customer orders, you get:
 
 ## 🎯 Next Steps
 
-1. Upload all 4 files to GitHub in `v4` folder
+1. Upload all 4 files to GitHub in `v5` folder
 2. Enable GitHub Pages
 3. Open admin.html 
 4. Update WhatsApp number to: **+971123456789**

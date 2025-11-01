@@ -494,6 +494,25 @@
             border-bottom: 2px dashed rgba(0,0,0,0.1);
         }
 
+        .free-delivery-message {
+            font-size: 0.9em;
+            color: var(--primary);
+            margin-top: 5px;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            background: rgba(212, 96, 62, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            border-left: 4px solid var(--primary);
+        }
+
+        .free-delivery-message.success {
+            color: var(--success);
+            background: rgba(76, 175, 80, 0.1);
+            border-left-color: var(--success);
+        }
+
         .cart-total {
             font-size: 1.8em;
             font-weight: 800;
@@ -657,6 +676,61 @@
             transform: translateY(0);
         }
 
+        .whatsapp-btn:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .whatsapp-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .btn-wrapper .tooltip {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 10px 15px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            max-width: 300px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .btn-wrapper .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .btn-wrapper:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
         /* Empty state */
         .empty-products {
             text-align: center;
@@ -776,6 +850,7 @@
                         <span>🚗 Delivery Fee (<span id="deliveryDistance">0</span> km):</span>
                         <span id="deliveryFee">AED 0.00</span>
                     </div>
+                    <div id="freeDeliveryProgress" class="free-delivery-message" style="display: none;"></div>
                     <div class="cart-delivery-status" id="freeDeliveryMessage" style="display: none; color: var(--success); font-size: 0.9em; margin-top: 5px;">
                         🎉 Free delivery applied!
                     </div>
@@ -845,10 +920,13 @@
                         <textarea id="orderNotes" placeholder="Any special instructions or requests..."></textarea>
                     </div>
 
-                    <button class="whatsapp-btn" onclick="sendWhatsAppOrder()">
-                        <span style="font-size: 1.5em;">📱</span>
-                        Send Order via WhatsApp
-                    </button>
+                    <div class="btn-wrapper">
+                        <button class="whatsapp-btn" id="whatsappBtn" onclick="sendWhatsAppOrder()">
+                            <span style="font-size: 1.5em;">📱</span>
+                            Send Order via WhatsApp
+                        </button>
+                        <span class="tooltip" id="whatsappTooltip"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -992,11 +1070,20 @@
 
         // Update delivery fee display
         function updateDeliveryFee() {
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            const whatsappTooltip = document.getElementById('whatsappTooltip');
+            const freeDeliveryProgress = document.getElementById('freeDeliveryProgress');
+            
+            console.log('updateDeliveryFee called, selectedLocation:', selectedLocation);
+            console.log('deliverySettings:', deliverySettings);
+            
             if (!selectedLocation) {
                 document.getElementById('deliveryFeeDisplay').style.display = 'none';
                 document.getElementById('freeDeliveryMessage').style.display = 'none';
                 document.getElementById('maxDistanceWarning').style.display = 'none';
-                renderCart(); // Update total without delivery
+                if (freeDeliveryProgress) freeDeliveryProgress.style.display = 'none';
+                if (whatsappBtn) whatsappBtn.disabled = false;
+                if (whatsappTooltip) whatsappTooltip.textContent = '';
                 return;
             }
             
@@ -1008,24 +1095,69 @@
             );
             
             const deliveryInfo = calculateDeliveryFee(distance);
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            console.log('Distance:', distance, 'DeliveryInfo:', deliveryInfo, 'Subtotal:', subtotal);
             
             document.getElementById('deliveryDistance').textContent = deliveryInfo.distance.toFixed(2);
             document.getElementById('deliveryFee').textContent = `AED ${deliveryInfo.fee.toFixed(2)}`;
             document.getElementById('deliveryFeeDisplay').style.display = 'flex';
             
+            // Check if distance exceeds 25km and disable button
+            if (distance > 25) {
+                if (whatsappBtn) whatsappBtn.disabled = true;
+                if (whatsappTooltip) whatsappTooltip.textContent = `⚠️ Sorry, delivery is not available for locations more than 25 km away. Your location is ${distance.toFixed(2)} km from our store.`;
+            } else {
+                if (whatsappBtn) whatsappBtn.disabled = false;
+                if (whatsappTooltip) whatsappTooltip.textContent = '';
+            }
+            
+            // Show free delivery progress message
             if (deliveryInfo.isFree) {
+                console.log('Delivery is FREE');
                 document.getElementById('freeDeliveryMessage').style.display = 'block';
                 document.getElementById('maxDistanceWarning').style.display = 'none';
+                if (freeDeliveryProgress) {
+                    freeDeliveryProgress.style.display = 'block';
+                    freeDeliveryProgress.className = 'free-delivery-message success';
+                    freeDeliveryProgress.textContent = '🎉 You qualify for free delivery!';
+                }
             } else if (deliveryInfo.exceedsMaxDistance) {
+                console.log('Exceeds max distance');
                 document.getElementById('freeDeliveryMessage').style.display = 'none';
                 document.getElementById('maxDistanceWarning').style.display = 'block';
                 document.getElementById('deliveryFeeDisplay').style.display = 'none';
+                if (freeDeliveryProgress) freeDeliveryProgress.style.display = 'none';
             } else {
+                console.log('Normal delivery with fee');
                 document.getElementById('freeDeliveryMessage').style.display = 'none';
                 document.getElementById('maxDistanceWarning').style.display = 'none';
+                
+                // Calculate how much more is needed for free delivery
+                const freeDeliveryThreshold = deliverySettings.minOrderFreeDelivery || 0;
+                console.log('Free delivery threshold:', freeDeliveryThreshold);
+                
+                if (freeDeliveryProgress) {
+                    if (freeDeliveryThreshold > 0) {
+                        const amountNeeded = freeDeliveryThreshold - subtotal;
+                        console.log('Amount needed for free delivery:', amountNeeded);
+                        if (amountNeeded > 0) {
+                            freeDeliveryProgress.style.display = 'block';
+                            freeDeliveryProgress.className = 'free-delivery-message';
+                            freeDeliveryProgress.textContent = `🚚 Add AED ${amountNeeded.toFixed(2)} more to get FREE delivery!`;
+                            console.log('Showing free delivery progress message');
+                        } else {
+                            // Subtotal meets threshold but not getting free delivery (might be due to distance)
+                            freeDeliveryProgress.style.display = 'none';
+                            console.log('Subtotal meets threshold, hiding message');
+                        }
+                    } else {
+                        // No free delivery threshold set, don't show message
+                        freeDeliveryProgress.style.display = 'none';
+                        console.log('No free delivery threshold set');
+                    }
+                }
             }
-            
-            renderCart(); // Update total with delivery fee
         }
 
         // Load products
@@ -1231,6 +1363,8 @@
                 if (!map) {
                     initMap();
                 }
+                // Update free delivery progress message after map is ready
+                updateDeliveryFee();
             }, 100);
         }
 

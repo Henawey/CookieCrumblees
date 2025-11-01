@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweet Treats - Artisan Cookies & Brownies</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍪</text></svg>">
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d4603e;
+            --primary-dark: #b8543a;
+            --secondary: #ffecd2;
+            --accent: #fcb69f;
+            --success: #4CAF50;
+            --danger: #f44336;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --white: #ffffff;
+            --shadow: 0 10px 40px rgba(0,0,0,0.1);
+            --shadow-hover: 0 15px 60px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid var(--secondary);
+            position: relative;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            font-size: 4em;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 3em;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            color: var(--text-light);
+            font-size: 1.2em;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* Products Section */
+        .section-title {
+            font-size: 2em;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .product-card {
+            background: var(--white);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: 0;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .product-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .product-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            transition: transform 0.4s;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--primary);
+            color: var(--white);
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(212, 96, 62, 0.3);
+            z-index: 2;
+        }
+
+        .product-code {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.8);
+            color: var(--white);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .product-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .product-description {
+            color: var(--text-light);
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            min-height: 45px;
+        }
+
+        .product-price {
+            font-size: 1.8em;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .currency {
+            font-size: 0.6em;
+            font-weight: 600;
+        }
+
+        /* Quantity Control */
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--secondary);
+            padding: 12px;
+            border-radius: 50px;
+        }
+
+        .quantity-btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(212, 96, 62, 0.3);
+        }
+
+        .quantity-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .quantity-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quantity-display {
+            font-size: 1.4em;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+            color: var(--text-dark);
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--success) 0%, #45a049 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .add-to-cart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .add-to-cart-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Cart Section */
+        .cart-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 25px;
+            padding: 35px;
+            margin-top: 50px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .cart-title {
+            font-size: 2em;
+            color: var(--text-dark);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .clear-cart-btn {
+            padding: 12px 24px;
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .clear-cart-btn:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        }
+
+        .cart-empty {
+            text-align: center;
+            color: var(--text-light);
+            padding: 50px;
+            font-size: 1.2em;
+        }
+
+        .cart-empty-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .cart-items {
+            margin-bottom: 25px;
+        }
+
+        .cart-item {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .cart-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .cart-item-details {
+            color: var(--text-light);
+            font-size: 0.9em;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .cart-item-detail {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-btn {
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);
+        }
+
+        .remove-btn:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+
+        .cart-summary {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        }
+
+        .cart-total {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* WhatsApp Section */
+        .whatsapp-section {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        }
+
+        .whatsapp-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(212, 96, 62, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+            position: relative;
+            background: #f5f5f5;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-instructions {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .location-info {
+            background: var(--secondary);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: var(--text-dark);
+        }
+
+        .location-info strong {
+            color: var(--primary);
+        }
+
+        .get-location-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .get-location-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .whatsapp-info {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .whatsapp-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #25D366 0%, #1fb855 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        .whatsapp-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Empty state */
+        .empty-products {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-products-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .logo {
+                font-size: 3em;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+
+            .cart-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .clear-cart-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .cart-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .remove-btn {
+                width: 100%;
+            }
+        }
+
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-container">
+                <span class="logo">🍪</span>
+                <h1 id="storeName">Sweet Treats</h1>
+            </div>
+            <p class="tagline" id="storeTagline">Artisan Cookies & Brownies Made with Love</p>
+        </div>
+
+        <!-- Products Section -->
+        <div id="productsSection">
+            <h2 class="section-title">Our Delicious Creations</h2>
+            <div class="products-grid" id="productsGrid">
+                <div class="loading empty-products">
+                    <div class="empty-products-icon">🍰</div>
+                    <h3>Loading delicious treats...</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Section -->
+        <div class="cart-section">
+            <div class="cart-header">
+                <h2 class="cart-title">
+                    <span>🛒</span>
+                    Your Cart
+                </h2>
+                <button class="clear-cart-btn" id="clearCartBtn" onclick="clearCart()" style="display: none;">
+                    <span>🗑️</span>
+                    Clear Cart
+                </button>
+            </div>
+            
+            <div id="cartItems" class="cart-items">
+                <div class="cart-empty">
+                    <div class="cart-empty-icon">🛍️</div>
+                    <p>Your cart is empty. Start adding some delicious treats!</p>
+                </div>
+            </div>
+            
+            <div id="cartSummary" style="display: none;">
+                <div class="cart-summary">
+                    <div class="cart-total">
+                        <span>Total:</span>
+                        <span id="cartTotal">AED 0.00</span>
+                    </div>
+                </div>
+                
+                <div class="whatsapp-section">
+                    <h3 class="whatsapp-title">
+                        <span>📍</span>
+                        Delivery Information
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label>
+                            <span>👤</span>
+                            Your Name *
+                        </label>
+                        <input type="text" id="customerName" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span>📱</span>
+                            Your Phone Number *
+                        </label>
+                        <input type="tel" id="customerPhone" placeholder="+971 50 123 4567" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span>🏠</span>
+                            Delivery Address *
+                        </label>
+                        <textarea id="deliveryAddress" placeholder="Enter your delivery address (building, street, area, landmarks...)" required></textarea>
+                    </div>
+
+                    <div class="map-instructions">
+                        <span>📌</span>
+                        Click on the map to mark your exact delivery location, or use the button below to get your current location
+                    </div>
+
+                    <button class="get-location-btn" onclick="getCurrentLocation()">
+                        <span>🎯</span>
+                        Use My Current Location
+                    </button>
+
+                    <div class="map-container">
+                        <div id="map"></div>
+                    </div>
+
+                    <div class="location-info" id="locationInfo" style="display: none;">
+                        <strong>Selected Location:</strong>
+                        <div id="selectedCoords"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span>💬</span>
+                            Additional Notes (Optional)
+                        </label>
+                        <textarea id="orderNotes" placeholder="Any special instructions or requests..."></textarea>
+                    </div>
+
+                    <button class="whatsapp-btn" onclick="sendWhatsAppOrder()">
+                        <span style="font-size: 1.5em;">📱</span>
+                        Send Order via WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS for Maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Global state
+        let products = [];
+        let cart = [];
+        let settings = {};
+        let map = null;
+        let marker = null;
+        let selectedLocation = null;
+
+        // Initialize app
+        function init() {
+            loadSettings();
+            loadProducts();
+            loadCart();
+            renderProducts();
+            renderCart();
+            updateStoreName();
+        }
+
+        // Update store name and tagline
+        function updateStoreName() {
+            if (settings.storeName) {
+                document.getElementById('storeName').textContent = settings.storeName;
+                document.title = settings.storeName;
+            }
+            if (settings.storeTagline) {
+                document.getElementById('storeTagline').textContent = settings.storeTagline;
+            }
+        }
+
+        // Load settings
+        function loadSettings() {
+            const saved = localStorage.getItem('storeSettings');
+            if (saved) {
+                settings = JSON.parse(saved);
+            } else {
+                settings = { 
+                    ownerWhatsApp: '+971501234567',
+                    storeName: 'Sweet Treats',
+                    storeTagline: 'Artisan Cookies & Brownies Made with Love'
+                };
+                // Try to load defaults
+                loadDefaultData();
+            }
+        }
+
+        // Load products
+        function loadProducts() {
+            const saved = localStorage.getItem('products');
+            products = saved ? JSON.parse(saved) : [];
+        }
+
+        // Load default data on first visit
+        async function loadDefaultData() {
+            try {
+                const response = await fetch('default-products.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.products && data.products.length > 0) {
+                        products = data.products;
+                        settings = data.settings || settings;
+                        localStorage.setItem('products', JSON.stringify(products));
+                        localStorage.setItem('storeSettings', JSON.stringify(settings));
+                        renderProducts();
+                        updateStoreName();
+                    }
+                }
+            } catch (error) {
+                console.log('No default products file found');
+            }
+        }
+
+        // Load cart
+        function loadCart() {
+            const saved = localStorage.getItem('cart');
+            cart = saved ? JSON.parse(saved) : [];
+        }
+
+        // Save cart
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        // Render products
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            
+            if (products.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-products">
+                        <div class="empty-products-icon">🍰</div>
+                        <h3>No products available yet</h3>
+                        <p>Check back soon for delicious treats!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const categoryEmojis = {
+                'cookies': '🍪',
+                'brownies': '🍫',
+                'cakes': '🎂',
+                'other': '🧁'
+            };
+
+            grid.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-badge">${product.category}</div>
+                    <div class="product-code">${product.code}</div>
+                    ${product.image ? 
+                        `<img src="${product.image}" class="product-image" alt="${product.name}">` : 
+                        `<div class="product-image" style="display: flex; align-items: center; justify-content: center; font-size: 5em;">${categoryEmojis[product.category] || '🧁'}</div>`
+                    }
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-price">
+                        <span class="currency">AED</span>
+                        ${product.price.toFixed(2)}
+                    </div>
+                    
+                    <div class="quantity-control">
+                        <button class="quantity-btn" onclick="changeQuantity(${product.id}, -1)">−</button>
+                        <span class="quantity-display" id="qty-${product.id}">1</span>
+                        <button class="quantity-btn" onclick="changeQuantity(${product.id}, 1)">+</button>
+                    </div>
+                    
+                    <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
+                        <span>🛒</span>
+                        Add to Cart
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Change quantity
+        function changeQuantity(productId, change) {
+            const qtyElement = document.getElementById(`qty-${productId}`);
+            let currentQty = parseInt(qtyElement.textContent);
+            currentQty = Math.max(1, Math.min(99, currentQty + change));
+            qtyElement.textContent = currentQty;
+        }
+
+        // Add to cart
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const quantity = parseInt(document.getElementById(`qty-${productId}`).textContent);
+            
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    code: product.code,
+                    price: product.price,
+                    quantity: quantity
+                });
+            }
+            
+            saveCart();
+            renderCart();
+            
+            // Reset quantity to 1
+            document.getElementById(`qty-${productId}`).textContent = '1';
+            
+            // Show success feedback
+            showNotification('Added to cart! 🎉');
+        }
+
+        // Remove from cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            renderCart();
+            showNotification('Item removed from cart');
+        }
+
+        // Clear cart
+        function clearCart() {
+            if (confirm('Are you sure you want to clear your cart?')) {
+                cart = [];
+                saveCart();
+                renderCart();
+                showNotification('Cart cleared');
+            }
+        }
+
+        // Render cart
+        function renderCart() {
+            const cartItemsDiv = document.getElementById('cartItems');
+            const cartSummary = document.getElementById('cartSummary');
+            const clearCartBtn = document.getElementById('clearCartBtn');
+            
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = `
+                    <div class="cart-empty">
+                        <div class="cart-empty-icon">🛍️</div>
+                        <p>Your cart is empty. Start adding some delicious treats!</p>
+                    </div>
+                `;
+                cartSummary.style.display = 'none';
+                clearCartBtn.style.display = 'none';
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            cartItemsDiv.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-details">
+                            <span class="cart-item-detail">📦 Code: ${item.code}</span>
+                            <span class="cart-item-detail">✖️ Qty: ${item.quantity}</span>
+                            <span class="cart-item-detail">💰 AED ${item.price.toFixed(2)}</span>
+                            <span class="cart-item-detail">💵 Subtotal: AED ${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('cartTotal').textContent = `AED ${total.toFixed(2)}`;
+            cartSummary.style.display = 'block';
+            clearCartBtn.style.display = 'flex';
+            
+            // Initialize map if not already initialized
+            setTimeout(() => {
+                if (!map) {
+                    initMap();
+                }
+            }, 100);
+        }
+
+        // Initialize map
+        function initMap() {
+            // Default to Dubai coordinates
+            const defaultLat = 25.2048;
+            const defaultLng = 55.2708;
+            
+            map = L.map('map').setView([defaultLat, defaultLng], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Add click event to map
+            map.on('click', function(e) {
+                setMarker(e.latlng.lat, e.latlng.lng);
+            });
+        }
+
+        // Set marker on map
+        function setMarker(lat, lng) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            
+            marker = L.marker([lat, lng]).addTo(map);
+            selectedLocation = { lat, lng };
+            
+            // Show location info
+            document.getElementById('locationInfo').style.display = 'block';
+            document.getElementById('selectedCoords').textContent = `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`;
+            
+            // Get address from coordinates (reverse geocoding)
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.display_name && !document.getElementById('deliveryAddress').value) {
+                        document.getElementById('deliveryAddress').value = data.display_name;
+                    }
+                })
+                .catch(err => console.log('Geocoding error:', err));
+        }
+
+        // Get current location
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert('❌ Geolocation is not supported by your browser. Please click on the map to select your location manually.');
+                return;
+            }
+            
+            showNotification('📍 Getting your location...');
+            
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    map.setView([lat, lng], 15);
+                    setMarker(lat, lng);
+                    
+                    showNotification('✅ Location set successfully! 📍');
+                },
+                (error) => {
+                    let errorMessage = '';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location permission denied. Please enable location access in your browser settings and try again, or click on the map to select your location manually.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information is unavailable. Please click on the map to select your location manually.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Location request timed out. Please click on the map to select your location manually.';
+                            break;
+                        default:
+                            errorMessage = 'An unknown error occurred. Please click on the map to select your location manually.';
+                            break;
+                    }
+                    alert('⚠️ ' + errorMessage);
+                    console.error('Geolocation error:', error);
+                },
+                options
+            );
+        }
+
+        // Send WhatsApp order
+        function sendWhatsAppOrder() {
+            if (cart.length === 0) {
+                alert('Your cart is empty');
+                return;
+            }
+
+            // Validate customer information
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerPhone = document.getElementById('customerPhone').value.trim();
+            const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
+            const orderNotes = document.getElementById('orderNotes').value.trim();
+
+            if (!customerName) {
+                alert('Please enter your name');
+                document.getElementById('customerName').focus();
+                return;
+            }
+
+            if (!customerPhone) {
+                alert('Please enter your phone number');
+                document.getElementById('customerPhone').focus();
+                return;
+            }
+
+            if (!deliveryAddress) {
+                alert('Please enter your delivery address');
+                document.getElementById('deliveryAddress').focus();
+                return;
+            }
+
+            if (!selectedLocation) {
+                alert('Please select your delivery location on the map');
+                return;
+            }
+            
+            // Get owner's WhatsApp number from settings
+            const ownerPhone = settings.ownerWhatsApp.replace(/\s/g, '');
+            
+            if (!ownerPhone) {
+                alert('Store WhatsApp number not configured. Please contact the store owner.');
+                return;
+            }
+            
+            let message = `🍪 *New Order from ${settings.storeName || 'Sweet Treats'}* 🍪\n\n`;
+            
+            // Customer Information
+            message += '*Customer Information:*\n';
+            message += '━━━━━━━━━━━━━━━━━━━━\n';
+            message += `👤 Name: ${customerName}\n`;
+            message += `📱 Phone: ${customerPhone}\n\n`;
+            
+            // Delivery Information
+            message += '*Delivery Information:*\n';
+            message += '━━━━━━━━━━━━━━━━━━━━\n';
+            message += `🏠 Address: ${deliveryAddress}\n`;
+            message += `📍 Location: https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}\n`;
+            if (orderNotes) {
+                message += `💬 Notes: ${orderNotes}\n`;
+            }
+            message += '\n';
+            
+            // Order Details
+            message += '*Order Details:*\n';
+            message += '━━━━━━━━━━━━━━━━━━━━\n';
+            
+            cart.forEach((item, index) => {
+                message += `\n${index + 1}. *${item.name}*\n`;
+                message += `   📦 Code: ${item.code}\n`;
+                message += `   ✖️ Quantity: ${item.quantity}\n`;
+                message += `   💰 Price: AED ${item.price.toFixed(2)}\n`;
+                message += `   💵 Subtotal: AED ${(item.price * item.quantity).toFixed(2)}\n`;
+            });
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            message += '\n━━━━━━━━━━━━━━━━━━━━\n';
+            message += `*Total Amount: AED ${total.toFixed(2)}*`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Show notification
+        function showNotification(message) {
+            // Simple alert for now - can be enhanced with toast notifications
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Initialize on page load
+        window.onload = init;
+
+        // Listen for storage changes (when admin updates products)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'products') {
+                loadProducts();
+                renderProducts();
+            }
+            if (e.key === 'storeSettings') {
+                loadSettings();
+                updateStoreName();
+            }
+        });
+    </script>
+</body>
+</html>

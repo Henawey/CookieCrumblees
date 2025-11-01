@@ -1,4 +1,4 @@
-# Sweet Treats Bakery Website
+# Cookies Crumblees Bakery Website
 
 A beautiful, mobile-responsive bakery website with shopping cart, map-based delivery, and WhatsApp ordering.
 
@@ -6,8 +6,8 @@ A beautiful, mobile-responsive bakery website with shopping cart, map-based deli
 
 Upload these files to your GitHub Pages repository in the `v4` folder:
 
-- **Store:** `https://henawey.github.io/CookieCrumblees/v5//store.html`
-- **Admin:** `https://henawey.github.io/CookieCrumblees/v5//admin.html`
+- **Store:** `https://henawey.github.io/CookieCrumblees/v5/store.html`
+- **Admin:** `https://henawey.github.io/CookieCrumblees/v5/admin.html`
 
 ## 📁 Required Files
 
@@ -26,7 +26,7 @@ v4/
 
 The `default-products.json` file is **REQUIRED** and must be in the same folder as your HTML files!
 
-- When users visit for the first time, they'll see 6 sample products
+- When users visit for the first time, they'll see 2 sample products
 - Admin can then customize, add, or remove products
 - Without this file, store will be empty on first visit
 
@@ -59,7 +59,7 @@ This is correct for Dubai! The map will center on Dubai by default.
 ### GitHub Pages Setup:
 
 1. Create a GitHub repository
-2. Upload all files to a folder named `v4`
+2. Upload all files to a folder named `v5`
 3. Enable GitHub Pages in Settings → Pages
 4. Your site will be live with HTTPS!
 

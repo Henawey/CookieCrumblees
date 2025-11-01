@@ -414,6 +414,7 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.06);
             transition: all 0.3s;
             animation: slideIn 0.3s ease;
+            flex-wrap: wrap;
         }
 
         @keyframes slideIn {
@@ -434,6 +435,7 @@
 
         .cart-item-info {
             flex: 1;
+            min-width: 200px;
         }
 
         .cart-item-name {
@@ -470,6 +472,77 @@
         }
 
         .remove-btn:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .cart-qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--secondary);
+            padding: 8px 15px;
+            border-radius: 25px;
+        }
+
+        .cart-qty-btn {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .cart-qty-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .cart-qty-btn:active {
+            transform: scale(0.95);
+        }
+
+        .cart-qty-display {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: var(--text-dark);
+        }
+
+        .cart-delete-btn {
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        .cart-delete-btn:hover {
             background: #da190b;
             transform: scale(1.05);
         }
@@ -1293,6 +1366,35 @@
             showNotification('Item removed from cart');
         }
 
+        // Increase cart quantity
+        function increaseCartQuantity(productId) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.quantity += 1;
+                saveCart();
+                renderCart();
+                showNotification('Quantity increased');
+            }
+        }
+
+        // Decrease cart quantity
+        function decreaseCartQuantity(productId) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                if (item.quantity > 1) {
+                    item.quantity -= 1;
+                    saveCart();
+                    renderCart();
+                    showNotification('Quantity decreased');
+                } else {
+                    // If quantity is 1, ask for confirmation before removing
+                    if (confirm('Remove this item from cart?')) {
+                        removeFromCart(productId);
+                    }
+                }
+            }
+        }
+
         // Clear cart
         function clearCart() {
             if (confirm('Are you sure you want to clear your cart?')) {
@@ -1344,12 +1446,21 @@
                         <div class="cart-item-name">${item.name}</div>
                         <div class="cart-item-details">
                             <span class="cart-item-detail">📦 Code: ${item.code}</span>
-                            <span class="cart-item-detail">✖️ Qty: ${item.quantity}</span>
                             <span class="cart-item-detail">💰 AED ${item.price.toFixed(2)}</span>
                             <span class="cart-item-detail">💵 Subtotal: AED ${(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                     </div>
-                    <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+                    <div class="cart-item-controls">
+                        <div class="cart-qty-controls">
+                            <button class="cart-qty-btn" onclick="decreaseCartQuantity(${item.id})">−</button>
+                            <span class="cart-qty-display">${item.quantity}</span>
+                            <button class="cart-qty-btn" onclick="increaseCartQuantity(${item.id})">+</button>
+                        </div>
+                        <button class="cart-delete-btn" onclick="removeFromCart(${item.id})">
+                            <span>🗑️</span>
+                            Delete
+                        </button>
+                    </div>
                 </div>
             `).join('');
             

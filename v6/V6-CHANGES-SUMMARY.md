@@ -1,14 +1,5 @@
 # Cookie Crumblees v6 - Changes Summary 🚗
 
-## 📦 What You're Getting
-
-All files are ready in the outputs folder:
-1. **store.html** - Customer-facing store with delivery fee calculator
-2. **admin.html** - Admin panel with delivery settings configuration
-3. **default-products.json** - Sample products
-4. **README.md** - Complete documentation
-5. **DEPLOYMENT-CHECKLIST.md** - Step-by-step setup guide
-
 ## 🆕 New Features in v6
 
 ### 1. **Automatic Delivery Fee Calculation** 🚗

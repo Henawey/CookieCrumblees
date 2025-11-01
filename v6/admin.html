@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweet Treats - Admin CMS</title>
+    <title>Cookie Crumblees - Admin CMS</title>
     
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
@@ -660,7 +660,7 @@
         <div class="login-header">
             <div class="login-icon">🔐</div>
             <h1 class="login-title">Admin Login</h1>
-            <p class="login-subtitle">Sweet Treats CMS</p>
+            <p class="login-subtitle">Cookie Crumblees CMS</p>
         </div>
 
         <form id="loginForm">
@@ -739,7 +739,7 @@
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">Store Name</div>
-                        <div class="setting-value" id="displayStoreName">Sweet Treats</div>
+                        <div class="setting-value" id="displayStoreName">Cookie Crumblees</div>
                     </div>
                     <button class="btn btn-secondary btn-small" onclick="showSettingsModal()">
                         Edit
@@ -917,7 +917,7 @@
             <form id="settingsForm">
                 <div class="form-group">
                     <label>Store Name *</label>
-                    <input type="text" id="storeName" placeholder="Sweet Treats" required>
+                    <input type="text" id="storeName" placeholder="Cookie Crumblees" required>
                     <small style="color: var(--text-light); display: block; margin-top: 5px;">
                         This will be displayed as your store's name
                     </small>
@@ -1182,7 +1182,7 @@
             const saved = localStorage.getItem('storeSettings');
             settings = saved ? JSON.parse(saved) : { 
                 ownerWhatsApp: '+971501234567',
-                storeName: 'Sweet Treats',
+                storeName: 'Cookie Crumblees',
                 storeTagline: 'Artisan Cookies & Brownies Made with Love'
             };
         }
@@ -1255,7 +1255,7 @@
 
         // Update settings display
         function updateSettingsDisplay() {
-            document.getElementById('displayStoreName').textContent = settings.storeName || 'Sweet Treats';
+            document.getElementById('displayStoreName').textContent = settings.storeName || 'Cookie Crumblees';
             document.getElementById('displayStoreTagline').textContent = settings.storeTagline || 'Artisan Cookies & Brownies Made with Love';
             document.getElementById('displayWhatsApp').textContent = settings.ownerWhatsApp;
         }
@@ -1273,7 +1273,7 @@
         });
 
         function showSettingsModal() {
-            document.getElementById('storeName').value = settings.storeName || 'Sweet Treats';
+            document.getElementById('storeName').value = settings.storeName || 'Cookie Crumblees';
             document.getElementById('storeTagline').value = settings.storeTagline || 'Artisan Cookies & Brownies Made with Love';
             document.getElementById('ownerWhatsApp').value = settings.ownerWhatsApp;
             document.getElementById('settingsModal').style.display = 'block';
@@ -1299,7 +1299,7 @@
                     products = data.products || [];
                     settings = data.settings || { 
                         ownerWhatsApp: '+971501234567',
-                        storeName: 'Sweet Treats',
+                        storeName: 'Cookie Crumblees',
                         storeTagline: 'Artisan Cookies & Brownies Made with Love'
                     };
                     saveProducts();

@@ -1,4 +1,4 @@
-# Sweet Treats Bakery Website - v6
+# Cookie Crumblees Bakery Website - v6
 
 A beautiful, mobile-responsive bakery website with shopping cart, map-based delivery, **automatic delivery fee calculation**, and WhatsApp ordering.
 

@@ -804,6 +804,61 @@
             opacity: 1;
         }
 
+        /* Fulfillment Method Selection */
+        .fulfillment-option {
+            border: 3px solid var(--secondary);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--white);
+            position: relative;
+        }
+
+        .fulfillment-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .fulfillment-option.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(212, 96, 62, 0.1) 0%, rgba(252, 182, 159, 0.1) 100%);
+            box-shadow: 0 5px 20px rgba(212, 96, 62, 0.3);
+        }
+
+        .fulfillment-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .fulfillment-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fulfillment-content strong {
+            font-size: 1.1em;
+            color: var(--text-dark);
+        }
+
+        .fulfillment-content small {
+            color: var(--text-light);
+            font-size: 0.9em;
+        }
+
+        #deliveryFieldsSection {
+            transition: all 0.3s ease;
+        }
+
+        #deliveryFieldsSection.hidden {
+            display: none;
+        }
+
         /* Empty state */
         .empty-products {
             text-align: center;
@@ -938,10 +993,36 @@
                 
                 <div class="whatsapp-section">
                     <h3 class="whatsapp-title">
-                        <span>📍</span>
-                        Delivery Information
+                        <span>📦</span>
+                        Order Information
                     </h3>
                     
+                    <!-- Fulfillment Method Selection -->
+                    <div id="fulfillmentMethodSection" class="form-group" style="margin-bottom: 25px;">
+                        <label style="font-weight: 700; font-size: 1.1em; margin-bottom: 15px; display: block; color: var(--text-dark);">
+                            <span>🛍️</span>
+                            Choose Fulfillment Method *
+                        </label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div id="pickupOption" class="fulfillment-option" onclick="selectFulfillmentMethod('pickup')" style="display: none;">
+                                <input type="radio" name="fulfillmentMethod" value="pickup" id="fulfillmentPickup">
+                                <div class="fulfillment-content">
+                                    <span style="font-size: 2em;">🏪</span>
+                                    <strong>Pickup</strong>
+                                    <small>Pick up from store</small>
+                                </div>
+                            </div>
+                            <div id="deliveryOption" class="fulfillment-option" onclick="selectFulfillmentMethod('delivery')" style="display: none;">
+                                <input type="radio" name="fulfillmentMethod" value="delivery" id="fulfillmentDelivery">
+                                <div class="fulfillment-content">
+                                    <span style="font-size: 2em;">🚗</span>
+                                    <strong>Delivery</strong>
+                                    <small>Deliver to your address</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>
                             <span>👤</span>
@@ -958,6 +1039,8 @@
                         <input type="tel" id="customerPhone" placeholder="+971 50 123 4567" required>
                     </div>
 
+                    <!-- Delivery-specific fields -->
+                    <div id="deliveryFieldsSection">
                     <div class="form-group">
                         <label>
                             <span>🏠</span>
@@ -983,6 +1066,7 @@
                     <div class="location-info" id="locationInfo" style="display: none;">
                         <strong>Selected Location:</strong>
                         <div id="selectedCoords"></div>
+                    </div>
                     </div>
 
                     <div class="form-group">
@@ -1017,6 +1101,7 @@
         let map = null;
         let marker = null;
         let selectedLocation = null;
+        let selectedFulfillmentMethod = null; // 'pickup' or 'delivery'
 
         // Store location - will be loaded from deliverySettings
         let STORE_LOCATION = {
@@ -1029,6 +1114,7 @@
             loadSettings();
             loadDeliverySettings();
             updateStoreLocation(); // Update store location from settings
+            initializeFulfillmentOptions(); // Initialize pickup/delivery options
             loadProducts();
             loadCart();
             renderProducts();
@@ -1053,6 +1139,73 @@
             if (settings.storeTagline) {
                 document.getElementById('storeTagline').textContent = settings.storeTagline;
             }
+        }
+
+        // Initialize fulfillment options (pickup/delivery)
+        function initializeFulfillmentOptions() {
+            const pickupOption = document.getElementById('pickupOption');
+            const deliveryOption = document.getElementById('deliveryOption');
+            const fulfillmentSection = document.getElementById('fulfillmentMethodSection');
+            
+            const enablePickup = deliverySettings.enablePickup !== false; // default true
+            const enableDelivery = deliverySettings.enableDelivery !== false; // default true
+            
+            // Show/hide options based on settings
+            if (enablePickup) {
+                pickupOption.style.display = 'block';
+            }
+            if (enableDelivery) {
+                deliveryOption.style.display = 'block';
+            }
+            
+            // If only one option is enabled, select it automatically and hide the selection
+            if (enablePickup && !enableDelivery) {
+                selectFulfillmentMethod('pickup');
+                fulfillmentSection.style.display = 'none';
+            } else if (!enablePickup && enableDelivery) {
+                selectFulfillmentMethod('delivery');
+                fulfillmentSection.style.display = 'none';
+            } else if (enablePickup && enableDelivery) {
+                // Both enabled, show selection (default to delivery if both available)
+                fulfillmentSection.style.display = 'block';
+            } else {
+                // Neither enabled - shouldn't happen, but default to delivery
+                deliveryOption.style.display = 'block';
+                selectFulfillmentMethod('delivery');
+            }
+        }
+
+        // Select fulfillment method
+        function selectFulfillmentMethod(method) {
+            selectedFulfillmentMethod = method;
+            
+            const pickupOption = document.getElementById('pickupOption');
+            const deliveryOption = document.getElementById('deliveryOption');
+            const deliveryFields = document.getElementById('deliveryFieldsSection');
+            
+            // Update UI
+            pickupOption.classList.remove('selected');
+            deliveryOption.classList.remove('selected');
+            
+            if (method === 'pickup') {
+                document.getElementById('fulfillmentPickup').checked = true;
+                pickupOption.classList.add('selected');
+                deliveryFields.classList.add('hidden');
+                // Hide delivery fee if pickup is selected
+                document.getElementById('deliveryFeeDisplay').style.display = 'none';
+                document.getElementById('freeDeliveryProgress').style.display = 'none';
+            } else if (method === 'delivery') {
+                document.getElementById('fulfillmentDelivery').checked = true;
+                deliveryOption.classList.add('selected');
+                deliveryFields.classList.remove('hidden');
+                // Show delivery fee if location is selected
+                if (selectedLocation) {
+                    updateDeliveryFee();
+                }
+            }
+            
+            // Update cart total
+            renderCart();
         }
 
         // Load settings
@@ -1425,9 +1578,9 @@
             
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             
-            // Calculate delivery fee if location is selected
+            // Calculate delivery fee if delivery method is selected and location is selected
             let deliveryFee = 0;
-            if (selectedLocation) {
+            if (selectedFulfillmentMethod === 'delivery' && selectedLocation) {
                 const distance = calculateDistance(
                     STORE_LOCATION.lat,
                     STORE_LOCATION.lng,
@@ -1615,10 +1768,15 @@
                 return;
             }
 
+            // Check if fulfillment method is selected
+            if (!selectedFulfillmentMethod) {
+                alert('Please select a fulfillment method (Pickup or Delivery)');
+                return;
+            }
+
             // Validate customer information
             const customerName = document.getElementById('customerName').value.trim();
             const customerPhone = document.getElementById('customerPhone').value.trim();
-            const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
             const orderNotes = document.getElementById('orderNotes').value.trim();
 
             if (!customerName) {
@@ -1633,30 +1791,39 @@
                 return;
             }
 
-            if (!deliveryAddress) {
-                alert('Please enter your delivery address');
-                document.getElementById('deliveryAddress').focus();
-                return;
-            }
+            // Only validate delivery fields if delivery is selected
+            if (selectedFulfillmentMethod === 'delivery') {
+                const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
+                
+                if (!deliveryAddress) {
+                    alert('Please enter your delivery address');
+                    document.getElementById('deliveryAddress').focus();
+                    return;
+                }
 
-            if (!selectedLocation) {
-                alert('Please select your delivery location on the map');
-                return;
+                if (!selectedLocation) {
+                    alert('Please select your delivery location on the map');
+                    return;
+                }
             }
             
-            // Calculate delivery fee
-            const distance = calculateDistance(
-                STORE_LOCATION.lat,
-                STORE_LOCATION.lng,
-                selectedLocation.lat,
-                selectedLocation.lng
-            );
-            const deliveryInfo = calculateDeliveryFee(distance);
-            
-            // Check if location exceeds maximum delivery distance
-            if (deliveryInfo.exceedsMaxDistance) {
-                alert(`Sorry, we cannot deliver to your location. Maximum delivery distance is ${deliverySettings.maxDeliveryRadius} km. Your location is ${distance.toFixed(2)} km away.`);
-                return;
+            // Calculate delivery fee (only if delivery method selected)
+            let distance = 0;
+            let deliveryInfo = null;
+            if (selectedFulfillmentMethod === 'delivery') {
+                distance = calculateDistance(
+                    STORE_LOCATION.lat,
+                    STORE_LOCATION.lng,
+                    selectedLocation.lat,
+                    selectedLocation.lng
+                );
+                deliveryInfo = calculateDeliveryFee(distance);
+                
+                // Check if location exceeds maximum delivery distance
+                if (deliveryInfo.exceedsMaxDistance) {
+                    alert(`Sorry, we cannot deliver to your location. Maximum delivery distance is ${deliverySettings.maxDeliveryRadius} km. Your location is ${distance.toFixed(2)} km away.`);
+                    return;
+                }
             }
             
             // Get owner's WhatsApp number from settings
@@ -1669,22 +1836,36 @@
             
             let message = `🍪 *New Order from ${settings.storeName || 'Cookie Crumblees'}* 🍪\n\n`;
             
+            // Fulfillment Method
+            message += '*Fulfillment Method:*\n';
+            message += '━━━━━━━━━━━━━━━━━━━━\n';
+            if (selectedFulfillmentMethod === 'pickup') {
+                message += `🏪 *PICKUP* - Customer will pick up from store\n\n`;
+            } else {
+                message += `🚗 *DELIVERY*\n\n`;
+            }
+            
             // Customer Information
             message += '*Customer Information:*\n';
             message += '━━━━━━━━━━━━━━━━━━━━\n';
             message += `👤 Name: ${customerName}\n`;
             message += `📱 Phone: ${customerPhone}\n\n`;
             
-            // Delivery Information
-            message += '*Delivery Information:*\n';
-            message += '━━━━━━━━━━━━━━━━━━━━\n';
-            message += `🏠 Address: ${deliveryAddress}\n`;
-            message += `📍 Location: https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}\n`;
-            message += `🚗 Distance: ${distance.toFixed(2)} km\n`;
-            if (orderNotes) {
-                message += `💬 Notes: ${orderNotes}\n`;
+            // Delivery Information (only if delivery selected)
+            if (selectedFulfillmentMethod === 'delivery') {
+                const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
+                message += '*Delivery Information:*\n';
+                message += '━━━━━━━━━━━━━━━━━━━━\n';
+                message += `🏠 Address: ${deliveryAddress}\n`;
+                message += `📍 Location: https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}\n`;
+                message += `🚗 Distance: ${distance.toFixed(2)} km\n`;
+                if (orderNotes) {
+                    message += `💬 Notes: ${orderNotes}\n`;
+                }
+                message += '\n';
+            } else if (orderNotes) {
+                message += `💬 Notes: ${orderNotes}\n\n`;
             }
-            message += '\n';
             
             // Order Details
             message += '*Order Details:*\n';
@@ -1699,15 +1880,24 @@
             });
             
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const total = subtotal + deliveryInfo.fee;
+            let total = subtotal;
             
             message += '\n━━━━━━━━━━━━━━━━━━━━\n';
             message += `*Subtotal: AED ${subtotal.toFixed(2)}*\n`;
-            message += `*Delivery Fee: AED ${deliveryInfo.fee.toFixed(2)}*`;
-            if (deliveryInfo.isFree) {
-                message += ` 🎉 (Free Delivery!)`;
+            
+            // Add delivery fee only if delivery method selected
+            if (selectedFulfillmentMethod === 'delivery' && deliveryInfo) {
+                message += `*Delivery Fee: AED ${deliveryInfo.fee.toFixed(2)}*`;
+                if (deliveryInfo.isFree) {
+                    message += ` 🎉 (Free Delivery!)`;
+                }
+                message += `\n`;
+                total = subtotal + deliveryInfo.fee;
+            } else if (selectedFulfillmentMethod === 'pickup') {
+                message += `*Delivery Fee: AED 0.00* (Pickup)\n`;
             }
-            message += `\n*Total Amount: AED ${total.toFixed(2)}*`;
+            
+            message += `*Total Amount: AED ${total.toFixed(2)}*`;
             
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;

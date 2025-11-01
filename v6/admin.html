@@ -773,6 +773,15 @@
                 Delivery Fee Settings
             </h2>
             <div class="settings-grid">
+                <div class="setting-item" style="grid-column: 1 / -1; background: linear-gradient(135deg, #fff3cd 0%, #ffe5b4 100%); border-left: 4px solid #ff9800;">
+                    <div class="setting-info">
+                        <div class="setting-label">🛍️ Fulfillment Options</div>
+                        <div class="setting-value" id="displayFulfillmentOptions">Pickup & Delivery Enabled</div>
+                    </div>
+                    <button class="btn btn-secondary btn-small" onclick="showDeliverySettingsModal()">
+                        Edit
+                    </button>
+                </div>
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">Price Per Kilometer</div>
@@ -1020,6 +1029,37 @@
                 <button class="close-btn" onclick="closeModal('deliverySettingsModal')">&times;</button>
             </div>
             <form id="deliverySettingsForm">
+                <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #ff9800;">
+                    <h3 style="margin: 0 0 15px 0; color: #f57c00; font-size: 1.1em;">
+                        🛍️ Fulfillment Options
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                            <input type="checkbox" id="enablePickup" style="width: 20px; height: 20px; cursor: pointer;">
+                            Enable Pickup Option
+                        </label>
+                        <small style="color: var(--text-light); display: block; margin-top: 5px; margin-left: 30px;">
+                            Allow customers to pick up their orders from your store location
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600;">
+                            <input type="checkbox" id="enableDelivery" style="width: 20px; height: 20px; cursor: pointer;">
+                            Enable Delivery Option
+                        </label>
+                        <small style="color: var(--text-light); display: block; margin-top: 5px; margin-left: 30px;">
+                            Allow customers to request delivery to their location
+                        </small>
+                    </div>
+                </div>
+
+                <div id="deliverySettingsSection">
+                <h3 style="margin: 0 0 20px 0; color: var(--text-dark); font-size: 1.2em; padding-bottom: 10px; border-bottom: 2px solid var(--secondary);">
+                    🚗 Delivery Pricing
+                </h3>
+                
                 <div class="form-group">
                     <label>Price Per Kilometer (AED) *</label>
                     <input type="number" id="pricePerKm" step="0.01" min="0" placeholder="2.00" required>
@@ -1090,6 +1130,7 @@
                         3. Click the coordinates to copy them<br>
                         4. Paste latitude and longitude above
                     </small>
+                </div>
                 </div>
 
                 <div class="modal-buttons">
@@ -1196,6 +1237,8 @@
         function loadDeliverySettings() {
             const saved = localStorage.getItem('deliverySettings');
             deliverySettings = saved ? JSON.parse(saved) : {
+                enablePickup: true,
+                enableDelivery: true,
                 pricePerKm: 2.00,
                 minOrderFreeDelivery: 50.00,
                 maxDeliveryRadius: 25,
@@ -1213,6 +1256,21 @@
 
         // Update delivery settings display
         function updateDeliverySettingsDisplay() {
+            // Update fulfillment options display
+            const pickup = deliverySettings.enablePickup !== false;
+            const delivery = deliverySettings.enableDelivery !== false;
+            let fulfillmentText = '';
+            if (pickup && delivery) {
+                fulfillmentText = '✅ Pickup & Delivery Enabled';
+            } else if (pickup) {
+                fulfillmentText = '✅ Pickup Only';
+            } else if (delivery) {
+                fulfillmentText = '✅ Delivery Only';
+            } else {
+                fulfillmentText = '❌ No Options Enabled';
+            }
+            document.getElementById('displayFulfillmentOptions').textContent = fulfillmentText;
+            
             document.getElementById('displayPricePerKm').textContent = `AED ${deliverySettings.pricePerKm.toFixed(2)} / km`;
             document.getElementById('displayBaseFee').textContent = `AED ${deliverySettings.baseFee.toFixed(2)}`;
             document.getElementById('displayMinOrder').textContent = deliverySettings.minOrderFreeDelivery > 0 
@@ -1229,6 +1287,8 @@
         // Delivery settings form
         document.getElementById('deliverySettingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            deliverySettings.enablePickup = document.getElementById('enablePickup').checked;
+            deliverySettings.enableDelivery = document.getElementById('enableDelivery').checked;
             deliverySettings.pricePerKm = parseFloat(document.getElementById('pricePerKm').value);
             deliverySettings.baseFee = parseFloat(document.getElementById('baseFee').value);
             deliverySettings.minOrderFreeDelivery = parseFloat(document.getElementById('minOrderFreeDelivery').value) || 0;
@@ -1243,6 +1303,8 @@
         });
 
         function showDeliverySettingsModal() {
+            document.getElementById('enablePickup').checked = deliverySettings.enablePickup !== false; // default true
+            document.getElementById('enableDelivery').checked = deliverySettings.enableDelivery !== false; // default true
             document.getElementById('pricePerKm').value = deliverySettings.pricePerKm;
             document.getElementById('baseFee').value = deliverySettings.baseFee;
             document.getElementById('minOrderFreeDelivery').value = deliverySettings.minOrderFreeDelivery;

@@ -1107,65 +1107,89 @@
                 .catch(err => console.log('Geocoding error:', err));
         }
 
-        // Get current location
-       // Get current location
-function getCurrentLocation() {
-    if (!navigator.geolocation) {
-        alert('❌ Geolocation is not supported by your browser. Please click on the map to select your location manually.');
-        return;
-    }
-    
-    showNotification('📍 Getting your location...');
-    
-    const options = {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-    };
-    
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            
-            console.log('GPS Location:', lat, lng);
-            console.log('Accuracy:', position.coords.accuracy, 'meters');
-            
-            // Verify coordinates are in Dubai range
-            // Dubai latitude: ~24.8 to 25.5
-            // Dubai longitude: ~54.9 to 55.6
-            if (lat >= 24.8 && lat <= 25.5 && lng >= 54.9 && lng <= 55.6) {
-                map.setView([lat, lng], 15);
-                setMarker(lat, lng);
-                showNotification('✅ Location set successfully! 📍');
-            } else {
-                // GPS returned wrong location (possibly IP-based fallback)
-                alert(`⚠️ GPS returned unexpected location:\nLat: ${lat}, Lng: ${lng}\n\nThis doesn't appear to be in Dubai. Please click on the map to select your location manually.`);
-                console.warn('Location outside Dubai range:', lat, lng);
-            }
-        },
-        (error) => {
-            let errorMessage = '';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
+       // Get location permission
+        function getCurrentLocation() {
+            const GEO_ERROR = {
+                PERMISSION_DENIED: 1,
+                POSITION_UNAVAILABLE: 2,
+                TIMEOUT: 3
+            };
+
+            function _showError(error) {
+                let errorMessage = '';
+                switch (error.code) {
+                case GEO_ERROR.PERMISSION_DENIED:
                     errorMessage = 'Location permission denied. Please enable location access in your browser settings, or click on the map to select your location manually.';
                     break;
-                case error.POSITION_UNAVAILABLE:
+                case GEO_ERROR.POSITION_UNAVAILABLE:
                     errorMessage = 'Location information is unavailable. This often happens when GPS signal is weak. Please click on the map to select your location manually.';
                     break;
-                case error.TIMEOUT:
+                case GEO_ERROR.TIMEOUT:
                     errorMessage = 'Location request timed out. Please click on the map to select your location manually.';
                     break;
                 default:
                     errorMessage = 'An error occurred while getting your location. Please click on the map to select your location manually.';
                     break;
+                }
+                alert('⚠️ ' + errorMessage);
+                console.error('Geolocation error:', error);
             }
-            alert('⚠️ ' + errorMessage);
-            console.error('Geolocation error:', error);
-        },
-        options
-    );
-}
+
+            function _onGetCurrentLocation() {
+                showNotification('📍 Getting your location...');
+                const options = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    console.log('GPS Location:', lat, lng);
+                    console.log('Accuracy:', position.coords.accuracy, 'meters');
+
+                    if (lat >= 24.8 && lat <= 25.5 && lng >= 54.9 && lng <= 55.6) {
+                        map.setView([lat, lng], 15);
+                        setMarker(lat, lng);
+                        showNotification('✅ Location set successfully! 📍');
+                    } else {
+                        alert(`⚠️ GPS returned unexpected location:\nLat: ${lat}, Lng: ${lng}\n\nThis doesn't appear to be in Dubai. Please click on the map to select your location manually.`);
+                        console.warn('Location outside Dubai range:', lat, lng);
+                    }
+                },
+                (error) => {
+
+                    _showError(error);
+                },
+                    options
+                );
+            }
+
+            if (!navigator.geolocation) {
+                alert('❌ Geolocation is not supported by your browser. Please click on the map to select your location manually.');
+                return;
+            }
+
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
+                    const permission = result.state;
+                    if (permission === 'granted' || permission === 'prompt') {
+                        _onGetCurrentLocation();
+                    } else {
+                        _showError({ code: GEO_ERROR.PERMISSION_DENIED });
+                    }
+                }).catch(function (err) {
+                    console.warn('Permissions API error:', err);
+                    _onGetCurrentLocation(); // fallback
+                });
+            } else {
+                _onGetCurrentLocation(); // fallback for older browsers
+            }
+        }
+
         // Send WhatsApp order
         function sendWhatsAppOrder() {
             if (cart.length === 0) {

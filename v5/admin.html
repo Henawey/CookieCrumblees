@@ -965,6 +965,14 @@
             updateStats();
             renderProducts();
             updateSettingsDisplay();
+            updateTitleStoreName();
+        }
+
+        function updateTitleStoreName() {
+            if (settings.storeName) {
+                document.getElementById('storeName').textContent = settings.storeName;
+                document.title = settings.storeName + ' - Admin CMS';
+            }
         }
 
         // Check authentication

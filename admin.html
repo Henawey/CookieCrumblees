@@ -2,13 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=v6/admin.html">
+  <title>Loading...</title>
+  
+  <base href="/CookieCrumblees/">
+
+  <script src="/CookieCrumblees/version.js"></script>
+
   <script>
-    // Fallback for browsers ignoring meta refresh
-    window.location.href = "v6/admin.html";
+    // Access the APP_VERSION variable defined in version.js
+    const v = APP_VERSION; 
+    
+    // Check if the version variable is available
+    if (!v) {
+        console.error("APP_VERSION not found. Is version.js loaded correctly?");
+    }
+
+    async function redirectToCurrent() {
+      try {
+        // 2. Use the APP_VERSION constant directly
+        const target = `${v}/admin.html`;
+
+        // Set up dynamic redirect (instantaneous)
+        document.write(`<meta http-equiv="refresh" content="0; url=${target}">`);
+
+        // Try to fetch subpage title (if needed, otherwise remove this section)
+        const res = await fetch(`./${target}`);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        document.title = doc.querySelector('title')?.textContent || 'Redirecting...';
+        
+        // Fallback redirect (should only execute if the document.write fails)
+        // window.location.href = target;
+      } catch (err) {
+        console.error('Error fetching subpage title or redirecting:', err);
+        // Fallback for immediate redirect if title fetch fails
+        window.location.href = `${v}/admin.html`;
+      }
+    }
+
+    // Only run if the version variable is defined
+    if (v) {
+        redirectToCurrent();
+    } else {
+        document.title = 'Error: Version Not Found';
+    }
   </script>
-  <title>Redirecting...</title>
 </head>
-<body>
-</body>
+<body></body>
 </html>
